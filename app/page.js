@@ -1,66 +1,53 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+import Link from 'next/link';
+import '../styles/globals.css';
 
 export default function Home() {
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className={styles.intro}>
-          <h1>To get started, edit the page.js file.</h1>
-          <p>
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <div className="container">
+      <div className="home-header">
+        <h1>Tech Info Hub</h1>
+        <p>エンジニアのための情報収集ツール</p>
+      </div>
+
+      <div className="home-grid">
+        <div className="home-card">
+          <div className="home-icon">📡</div>
+          <h2 className="home-title">ByteFlow</h2>
+          <p className="home-desc">
+            IT全般のニュースを広くチェック。毎朝のニュースキャッチアップに最適。
           </p>
-        </div>
-        <div className={styles.ctas}>
           <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
+            href="https://huggingface.co/spaces/byteflow-user/byteflow"
             target="_blank"
             rel="noopener noreferrer"
+            className="home-btn external"
           >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className={styles.secondary}
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
+            Open ByteFlow
           </a>
         </div>
-      </main>
+
+        <div className="home-card">
+          <div className="home-icon">🔥</div>
+          <h2 className="home-title">BuzzRadar</h2>
+          <p className="home-desc">
+            ITバズワードを用語として整理。会議・面接前の語彙確認に。
+          </p>
+          <Link href="/buzzradar" className="home-btn">
+            Open BuzzRadar
+          </Link>
+        </div>
+
+        <div className="home-card">
+          <div className="home-icon">⚡</div>
+          <h2 className="home-title">Databricks Hub</h2>
+          <p className="home-desc">
+            Databricks専門情報を深掘り。リリース情報からQiita記事まで。
+          </p>
+          <Link href="/databricks" className="home-btn databricks">
+            Open Databricks Hub
+          </Link>
+        </div>
+      </div>
     </div>
   );
 }
