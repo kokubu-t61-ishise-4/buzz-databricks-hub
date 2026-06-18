@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 
-export default function DetailPanel({ item, lang, onClose, type }) {
+export default function DetailPanel({ item, lang, onClose, type, borderColor }) {
   const [showOriginalDef, setShowOriginalDef] = useState(false);
   const [showOriginalBg, setShowOriginalBg] = useState(false);
   const [showOriginalDesc, setShowOriginalDesc] = useState(false);
@@ -11,12 +11,26 @@ export default function DetailPanel({ item, lang, onClose, type }) {
   if (!item) return null;
 
   const isBuzzRadar = type === 'buzzradar';
-  const isDatabricks = type === 'databricks';
+  const isHubType = ['databricks', 'ai-hub', 'ai-dev', 'data-eng'].includes(type);
+
+  const getBorderColor = () => {
+    if (borderColor) return borderColor;
+    const colors = {
+      databricks: '#FF3621',
+      'ai-hub': '#6366f1',
+      'ai-dev': '#f59e0b',
+      'data-eng': '#10b981'
+    };
+    return colors[type] || '#0071e3';
+  };
 
   return (
     <>
       <div className={`overlay ${item ? 'visible' : ''}`} onClick={onClose} />
-      <div className={`detail-panel ${item ? 'open' : ''} ${isDatabricks ? 'databricks' : ''}`}>
+      <div
+        className={`detail-panel ${item ? 'open' : ''}`}
+        style={isHubType ? { borderLeft: `4px solid ${getBorderColor()}` } : {}}
+      >
         <button className="detail-close" onClick={onClose}>&times;</button>
 
         {isBuzzRadar && (
@@ -85,7 +99,7 @@ export default function DetailPanel({ item, lang, onClose, type }) {
           </>
         )}
 
-        {isDatabricks && (
+        {isHubType && (
           <>
             <h2 className="detail-title">
               {lang === 'ja' ? item.titleJa : item.titleEn}
