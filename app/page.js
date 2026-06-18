@@ -52,7 +52,7 @@ export default function Home() {
           <div className="home-icon">🤖</div>
           <h2 className="home-title">AI Hub</h2>
           <p className="home-desc">
-            AI・LLM・Claudeの最新情報をまとめて。海外・日本両方対応。
+            AI・LLM・Claudeの最新情報。海外・日本両方対応。
           </p>
           <Link href="/ai-hub" className="home-btn" style={{ background: '#6366f1' }}>
             Open AI Hub
@@ -63,7 +63,7 @@ export default function Home() {
           <div className="home-icon">🚀</div>
           <h2 className="home-title">AI駆動開発 Hub</h2>
           <p className="home-desc">
-            AI駆動開発・Vibe Coding・プロンプトエンジニアリングの最新情報。
+            Cursor・GitHub Copilot・プロンプトエンジニアリングの最新動向。
           </p>
           <Link href="/ai-dev" className="home-btn" style={{ background: '#f59e0b' }}>
             Open AI駆動開発 Hub
@@ -74,7 +74,7 @@ export default function Home() {
           <div className="home-icon">📊</div>
           <h2 className="home-title">データエンジニアリング Hub</h2>
           <p className="home-desc">
-            データパイプライン・ウェアハウス・オーケストレーションの最新情報。
+            dbt・Airflow・Sparkなどデータパイプラインの最新情報。Qiita記事も収録。
           </p>
           <Link href="/data-eng" className="home-btn" style={{ background: '#10b981' }}>
             Open データエンジニアリング Hub
