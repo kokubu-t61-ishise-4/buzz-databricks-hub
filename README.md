@@ -1,36 +1,33 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Tech Info Hub
 
-## Getting Started
+## 概要
+エンジニアのための情報収集ツールを集約したポータルサイトです。
+Web検索APIとAIを組み合わせて、IT技術トレンドや各分野の最新情報を日英両言語で整理・表示します。
+バズワード、Databricks、AI、AI駆動開発、データエンジニアリングの5つの専門Hubを提供しています。
 
-First, run the development server:
+## 主な機能
+- BuzzRadar: ITバズワードを収集し、カテゴリ（AI/ML、インフラ、データ、セキュリティ）別に整理。用語の定義・背景・関連記事を表示
+- Databricks Hub: Databricksのリリース情報・機能解説・コミュニティ情報・Qiita記事を収集。データエンジニアへの影響も解説
+- AI Hub: AI・LLM・Claudeの最新情報をモデル・研究・ツール・Qiita記事に分類して収集
+- AI駆動開発 Hub: Cursor・GitHub Copilot・プロンプトエンジニアリング・エージェント関連の最新動向を収集
+- データエンジニアリング Hub: dbt・Airflow・Sparkなどパイプライン・ウェアハウス・オーケストレーション情報を収集
+- 日英切替: すべてのHubで日本語・英語表示を切り替え可能
+- カテゴリフィルタ: 各Hubでカテゴリ別に情報を絞り込み
+- 詳細パネル: カードをクリックすると詳細情報・関連リンクを表示
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## 使い方
+1. ホーム画面から利用したいHubを選択
+2. カテゴリフィルタで興味のある分野を絞り込み
+3. 日本語/英語ボタンで表示言語を切り替え
+4. カードをクリックして詳細情報を確認
+5. 「再取得」ボタンで最新情報を取得
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 技術スタック
+- **フレームワーク**: Next.js 16 (React 19)
+- **言語**: JavaScript
+- **Web検索**: Tavily API
+- **AI**: Groq API (Llama 3.3 70B)
+- **ホスティング**: Netlify
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## URL
+https://6a337791c1ea93000826eb38--musical-stardust-da3de9.netlify.app/
