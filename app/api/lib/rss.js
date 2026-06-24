@@ -28,9 +28,9 @@ export async function fetchMultipleRSS(feedUrls) {
   return items;
 }
 
-export function formatRSSItemsForPrompt(items, maxLength = 4000) {
+export function formatRSSItemsForPrompt(items, maxItems = 5, maxLength = 3000) {
   let text = items
-    .slice(0, 15)
+    .slice(0, maxItems)
     .map(item => {
       const title = item.title || '';
       const content = (item.description || item.content || '').replace(/<[^>]*>/g, '').substring(0, 300);

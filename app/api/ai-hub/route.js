@@ -69,6 +69,12 @@ ${combinedText}
     return NextResponse.json(data);
   } catch (error) {
     console.error('AI Hub API error:', error);
+    if (error.message === 'RATE_LIMIT') {
+      return NextResponse.json({
+        error: 'RATE_LIMIT',
+        message: 'APIの利用制限に達しました。しばらく待ってから再取得してください。'
+      }, { status: 429 });
+    }
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

@@ -1,4 +1,8 @@
-export async function callGroq(prompt, maxTokens = 8000) {
+const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+export async function callGroq(prompt, maxTokens = 4000) {
+  await delay(1000);
+
   const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
     headers: {
@@ -13,7 +17,7 @@ export async function callGroq(prompt, maxTokens = 8000) {
   });
   if (!response.ok) {
     if (response.status === 429) {
-      throw new Error('APIレート制限に達しました。1分後に再試行してください。');
+      throw new Error('RATE_LIMIT');
     }
     throw new Error(`Groq API error: ${response.status}`);
   }

@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import DetailPanel from '../../components/DetailPanel';
 import FilterBar from '../../components/FilterBar';
+import { useCachedFetch } from '../../hooks/useCachedFetch';
 import '../../styles/globals.css';
 
 const CATEGORIES = [
@@ -47,33 +48,10 @@ function AIHubCard({ item, lang, onClick }) {
 }
 
 export default function AIHubPage() {
-  const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const { items, loading, error, refresh } = useCachedFetch('/api/ai-hub', 'ai-hub-cache');
   const [category, setCategory] = useState('all');
   const [lang, setLang] = useState('ja');
   const [selectedItem, setSelectedItem] = useState(null);
-
-  const fetchData = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch('/api/ai-hub');
-      const data = await res.json();
-      if (data.error) {
-        throw new Error(data.error);
-      }
-      setItems(data);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchData();
-  }, []);
 
   const filteredItems = category === 'all'
     ? items
@@ -87,7 +65,7 @@ export default function AIHubPage() {
           <Link href="/" className="back-link">← ホームに戻る</Link>
           <button
             className="refresh-btn"
-            onClick={fetchData}
+            onClick={refresh}
             disabled={loading}
             style={{ background: '#6366f1' }}
           >
@@ -110,7 +88,7 @@ export default function AIHubPage() {
 
       {error && (
         <div className="error-box">
-          エラーが発生しました: {error}
+          {error}
         </div>
       )}
 
