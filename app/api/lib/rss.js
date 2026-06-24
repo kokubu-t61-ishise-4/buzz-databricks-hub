@@ -1,16 +1,34 @@
 const RSS2JSON_API = 'https://api.rss2json.com/v1/api.json?rss_url=';
 
 export async function fetchRSS(feedUrl) {
-  const response = await fetch(`${RSS2JSON_API}${encodeURIComponent(feedUrl)}`, {
-    next: { revalidate: 3600 }
-  });
+  let response;
+  try {
+    response = await fetch(`${RSS2JSON_API}${encodeURIComponent(feedUrl)}`, {
+      cache: 'no-store'
+    });
+  } catch (fetchError) {
+    console.error(`RSS fetch network error for ${feedUrl}:`, fetchError.message);
+    return [];
+  }
+
   if (!response.ok) {
-    throw new Error(`RSS fetch error: ${response.status}`);
+    console.error(`RSS fetch HTTP error for ${feedUrl}: ${response.status}`);
+    return [];
   }
-  const data = await response.json();
+
+  let data;
+  try {
+    data = await response.json();
+  } catch (parseError) {
+    console.error(`RSS JSON parse error for ${feedUrl}:`, parseError.message);
+    return [];
+  }
+
   if (data.status !== 'ok') {
-    throw new Error(`RSS parse error: ${data.message || 'Unknown error'}`);
+    console.error(`RSS status error for ${feedUrl}: ${data.message || 'Unknown'}`);
+    return [];
   }
+
   return data.items || [];
 }
 
@@ -21,7 +39,7 @@ export async function fetchMultipleRSS(feedUrls) {
 
   const items = [];
   for (const result of results) {
-    if (result.status === 'fulfilled') {
+    if (result.status === 'fulfilled' && Array.isArray(result.value)) {
       items.push(...result.value);
     }
   }
@@ -29,6 +47,10 @@ export async function fetchMultipleRSS(feedUrls) {
 }
 
 export function formatRSSItemsForPrompt(items, maxItems = 5, maxLength = 3000) {
+  if (!Array.isArray(items) || items.length === 0) {
+    return '';
+  }
+
   let text = items
     .slice(0, maxItems)
     .map(item => {

@@ -52,17 +52,25 @@ export function useCachedFetch(apiEndpoint, cacheKey) {
 
     try {
       const res = await fetch(apiEndpoint);
-      const data = await res.json();
+      let data;
 
-      if (data.error === 'RATE_LIMIT') {
-        throw new Error(data.message || 'APIの利用制限に達しました。しばらく待ってから再取得してください。');
+      try {
+        data = await res.json();
+      } catch {
+        throw new Error('サーバーからの応答を解析できませんでした。');
       }
+
       if (data.error) {
-        throw new Error(data.error);
+        throw new Error(data.message || data.error);
+      }
+
+      if (!Array.isArray(data)) {
+        throw new Error('不正なデータ形式です。');
       }
 
       setItems(data);
       setCachedData(data);
+      setError(null);
     } catch (err) {
       setError(err.message);
       const cached = getCachedData();

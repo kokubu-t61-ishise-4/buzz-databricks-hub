@@ -15,11 +15,21 @@ export async function GET() {
   try {
     const items = await fetchMultipleRSS(RSS_FEEDS);
 
-    if (items.length === 0) {
-      return NextResponse.json({ error: 'No RSS items fetched' }, { status: 500 });
+    if (!items || items.length === 0) {
+      return NextResponse.json({
+        error: 'RSS_FETCH_ERROR',
+        message: 'RSSフィードから記事を取得できませんでした。しばらく待ってから再取得してください。'
+      }, { status: 503 });
     }
 
     const combinedText = formatRSSItemsForPrompt(items);
+
+    if (!combinedText) {
+      return NextResponse.json({
+        error: 'RSS_PARSE_ERROR',
+        message: 'RSSフィードの解析に失敗しました。'
+      }, { status: 500 });
+    }
 
     const prompt = `以下は複数のRSSフィードから取得したAI・LLM関連の最新記事です。
 この中から、エンジニアが知っておくべきAI・LLM関連の記事を8件選び、フィルタリング・要約してください。
@@ -63,18 +73,26 @@ ${combinedText}
     const data = parseGroqJSON(content);
 
     if (!Array.isArray(data)) {
-      throw new Error('Invalid response format: expected array');
+      return NextResponse.json({
+        error: 'PARSE_ERROR',
+        message: 'AIレスポンスの解析に失敗しました。再取得してください。'
+      }, { status: 500 });
     }
 
     return NextResponse.json(data);
   } catch (error) {
     console.error('AI Hub API error:', error);
+
     if (error.message === 'RATE_LIMIT') {
       return NextResponse.json({
         error: 'RATE_LIMIT',
         message: 'APIの利用制限に達しました。しばらく待ってから再取得してください。'
       }, { status: 429 });
     }
-    return NextResponse.json({ error: error.message }, { status: 500 });
+
+    return NextResponse.json({
+      error: 'SERVER_ERROR',
+      message: error.message || 'サーバーエラーが発生しました。'
+    }, { status: 500 });
   }
 }
