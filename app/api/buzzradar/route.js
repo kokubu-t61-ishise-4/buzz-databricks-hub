@@ -1,62 +1,29 @@
 import { NextResponse } from 'next/server';
+import { fetchMultipleRSS, formatRSSItemsForPrompt } from '../lib/rss';
+import { callGroq, parseGroqJSON } from '../lib/groq';
 
-async function searchTavily(query) {
-  const response = await fetch('https://api.tavily.com/search', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      api_key: process.env.TAVILY_API_KEY,
-      query,
-      max_results: 5,
-      search_depth: 'basic'
-    })
-  });
-  if (!response.ok) {
-    throw new Error(`Tavily API error: ${response.status}`);
-  }
-  return response.json();
-}
-
-async function callGroq(prompt) {
-  const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${process.env.GROQ_API_KEY}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      model: 'llama-3.3-70b-versatile',
-      max_tokens: 3000,
-      messages: [{ role: 'user', content: prompt }]
-    })
-  });
-  if (!response.ok) {
-    throw new Error(`Groq API error: ${response.status}`);
-  }
-  return response.json();
-}
+const RSS_FEEDS = [
+  'https://www.publickey1.jp/atom.xml',
+  'https://hnrss.org/frontpage',
+  'https://zenn.dev/feed',
+  'https://qiita.com/popular-items/feed',
+  'https://techcrunch.com/category/artificial-intelligence/feed/',
+  'https://gihyo.jp/dev/feed/rss2'
+];
 
 export async function GET() {
   try {
-    const queries = [
-      'IT buzzwords trending 2025 2026 tech community site:techcrunch.com OR site:theverge.com OR site:zenn.dev',
-      'ITバズワード トレンド 2025 エンジニア site:zenn.dev OR site:qiita.com'
-    ];
+    const items = await fetchMultipleRSS(RSS_FEEDS);
 
-    const [result1, result2] = await Promise.all(queries.map(q => searchTavily(q)));
-
-    const allResults = [...(result1.results || []), ...(result2.results || [])];
-    let combinedText = allResults
-      .map(r => `Title: ${r.title}\nContent: ${r.content}`)
-      .join('\n\n');
-
-    if (combinedText.length > 3000) {
-      combinedText = combinedText.substring(0, 3000);
+    if (items.length === 0) {
+      return NextResponse.json({ error: 'No RSS items fetched' }, { status: 500 });
     }
 
-    const prompt = `以下はWeb検索で取得した最新のIT技術トレンド情報です。
-この情報をもとに、エンジニアが知っておくべきITバズワードを8個抽出し、
-必ずJSONの配列のみを返してください。マークダウン記法・コードブロック不要。
+    const combinedText = formatRSSItemsForPrompt(items);
+
+    const prompt = `以下は複数のRSSフィードから取得したIT技術関連の最新記事です。
+この中から、エンジニアが知っておくべきITバズワード・トレンド用語を8個抽出してください。
+JSONの配列のみを返してください。マークダウン・コードブロック不要。
 
 ${combinedText}
 
@@ -79,21 +46,25 @@ ${combinedText}
         "titleEn": "記事タイトル（英語）",
         "titleJa": "記事タイトル（日本語訳）",
         "source": "ソース名",
-        "url": "https://..."
+        "url": "実際のURL"
       }
     ]
   }
-]`;
+]
+
+重要：
+- URLは取得した記事の実際のURLを使用すること
+- 記事から実際に言及されているバズワード・用語を抽出すること
+- 架空の情報を生成せず、取得した記事に基づいて抽出すること`;
 
     const groqResponse = await callGroq(prompt);
     const content = groqResponse.choices[0].message.content;
+    const data = parseGroqJSON(content);
 
-    let jsonText = content.trim();
-    if (jsonText.startsWith('```')) {
-      jsonText = jsonText.replace(/^```json?\n?/, '').replace(/\n?```$/, '');
+    if (!Array.isArray(data)) {
+      throw new Error('Invalid response format: expected array');
     }
 
-    const data = JSON.parse(jsonText);
     return NextResponse.json(data);
   } catch (error) {
     console.error('BuzzRadar API error:', error);

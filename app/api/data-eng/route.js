@@ -1,76 +1,43 @@
 import { NextResponse } from 'next/server';
+import { fetchMultipleRSS, formatRSSItemsForPrompt } from '../lib/rss';
+import { callGroq, parseGroqJSON } from '../lib/groq';
 
-async function searchTavily(query) {
-  const response = await fetch('https://api.tavily.com/search', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      api_key: process.env.TAVILY_API_KEY,
-      query,
-      max_results: 5,
-      search_depth: 'basic'
-    })
-  });
-  if (!response.ok) {
-    throw new Error(`Tavily API error: ${response.status}`);
-  }
-  return response.json();
-}
-
-async function callGroq(prompt) {
-  const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${process.env.GROQ_API_KEY}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      model: 'llama-3.3-70b-versatile',
-      max_tokens: 8000,
-      messages: [{ role: 'user', content: prompt }]
-    })
-  });
-  if (!response.ok) {
-    throw new Error(`Groq API error: ${response.status}`);
-  }
-  return response.json();
-}
+const RSS_FEEDS = [
+  'https://qiita.com/tags/dbt/feed',
+  'https://qiita.com/tags/airflow/feed',
+  'https://qiita.com/tags/apachespark/feed',
+  'https://qiita.com/tags/dataengineering/feed',
+  'https://zenn.dev/topics/dbt/feed',
+  'https://zenn.dev/topics/airflow/feed',
+  'https://medium.com/feed/tag/data-engineering',
+  'https://aws.amazon.com/blogs/big-data/feed/'
+];
 
 export async function GET() {
   try {
-    const currentYear = new Date().getFullYear();
-    const queries = [
-      `data engineering pipeline dbt Airflow Spark ${currentYear} trends`,
-      `データエンジニアリング dbt Airflow ${currentYear} Qiita`
-    ];
+    const items = await fetchMultipleRSS(RSS_FEEDS);
 
-    const [result1, result2] = await Promise.all(queries.map(q => searchTavily(q)));
-
-    const allResults = [...(result1.results || []), ...(result2.results || [])];
-    let combinedText = allResults
-      .map(r => `Title: ${r.title}\nContent: ${r.content}`)
-      .join('\n\n');
-
-    if (combinedText.length > 3000) {
-      combinedText = combinedText.substring(0, 3000);
+    if (items.length === 0) {
+      return NextResponse.json({ error: 'No RSS items fetched' }, { status: 500 });
     }
 
-    const prompt = `以下はデータエンジニアリングに関するWeb検索の生データです。
-データエンジニアが知っておくべき最新情報を8件抽出してください。
-必ずtype="Qiita"を2件以上含めること。
+    const combinedText = formatRSSItemsForPrompt(items);
+
+    const prompt = `以下は複数のRSSフィードから取得したデータエンジニアリング関連の最新記事です。
+この中から、データエンジニアが知っておくべき最新情報を8件選び、フィルタリング・要約してください。
+必ずtype="Qiita"を2件以上含めること（URLにqiita.comが含まれるもの）。
 JSONの配列のみを返してください。マークダウン・コードブロック不要。
-各フィールドは簡潔に。summaryは1文、descは2文以内。
 
 ${combinedText}
 
 返すJSONの形式：
 [
   {
-    "titleEn": "英語タイトル",
-    "titleJa": "日本語タイトル",
+    "titleEn": "英語タイトル（記事タイトルを英訳）",
+    "titleJa": "日本語タイトル（元の記事タイトル）",
     "type": "Pipeline または Warehouse または Orchestration または Qiita",
-    "isNew": true または false,
-    "date": "2025-XX-XX",
+    "isNew": true,
+    "date": "YYYY-MM-DD形式の日付",
     "summaryEn": "英語で1文の要約",
     "summaryJa": "日本語で1文の要約",
     "descEn": "英語で2文以内の説明",
@@ -81,37 +48,21 @@ ${combinedText}
       {
         "titleEn": "リンクタイトル（英語）",
         "titleJa": "リンクタイトル（日本語）",
-        "source": "ソース名",
-        "url": "https://..."
+        "source": "Qiita または Zenn または AWS Blog または その他ソース名",
+        "url": "実際のURL"
       }
     ]
   }
-]`;
+]
+
+重要：
+- URLは取得した記事の実際のURLを使用すること
+- 日付は記事の公開日を使用すること
+- 架空の情報を生成せず、取得した記事のみを使用すること`;
 
     const groqResponse = await callGroq(prompt);
     const content = groqResponse.choices[0].message.content;
-
-    let jsonText = content.trim();
-    if (jsonText.startsWith('```')) {
-      jsonText = jsonText.replace(/^```json?\n?/, '').replace(/\n?```$/, '');
-    }
-
-    let data;
-    try {
-      data = JSON.parse(jsonText);
-    } catch (parseError) {
-      const bracketIndex = jsonText.lastIndexOf('}');
-      if (bracketIndex > 0) {
-        const truncated = jsonText.substring(0, bracketIndex + 1) + ']';
-        try {
-          data = JSON.parse(truncated);
-        } catch {
-          throw new Error(`JSON parse error: ${parseError.message}`);
-        }
-      } else {
-        throw new Error(`JSON parse error: ${parseError.message}`);
-      }
-    }
+    const data = parseGroqJSON(content);
 
     if (!Array.isArray(data)) {
       throw new Error('Invalid response format: expected array');
