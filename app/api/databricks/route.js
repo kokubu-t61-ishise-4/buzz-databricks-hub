@@ -26,7 +26,7 @@ async function callGroq(prompt) {
     },
     body: JSON.stringify({
       model: 'llama-3.3-70b-versatile',
-      max_tokens: 3000,
+      max_tokens: 8000,
       messages: [{ role: 'user', content: prompt }]
     })
   });
@@ -38,9 +38,10 @@ async function callGroq(prompt) {
 
 export async function GET() {
   try {
+    const currentYear = new Date().getFullYear();
     const queries = [
-      'Databricks latest release announcement feature 2025',
-      'Databricks Qiita 使い方 2025'
+      `Databricks latest release announcement feature ${currentYear}`,
+      `Databricks Qiita 使い方 ${currentYear}`
     ];
 
     const [result1, result2] = await Promise.all(queries.map(q => searchTavily(q)));
@@ -96,7 +97,27 @@ ${combinedText}
       jsonText = jsonText.replace(/^```json?\n?/, '').replace(/\n?```$/, '');
     }
 
-    const data = JSON.parse(jsonText);
+    let data;
+    try {
+      data = JSON.parse(jsonText);
+    } catch (parseError) {
+      const bracketIndex = jsonText.lastIndexOf('}');
+      if (bracketIndex > 0) {
+        const truncated = jsonText.substring(0, bracketIndex + 1) + ']';
+        try {
+          data = JSON.parse(truncated);
+        } catch {
+          throw new Error(`JSON parse error: ${parseError.message}`);
+        }
+      } else {
+        throw new Error(`JSON parse error: ${parseError.message}`);
+      }
+    }
+
+    if (!Array.isArray(data)) {
+      throw new Error('Invalid response format: expected array');
+    }
+
     return NextResponse.json(data);
   } catch (error) {
     console.error('Databricks API error:', error);

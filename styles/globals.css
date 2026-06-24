@@ -456,8 +456,14 @@ body {
 .home-desc {
   font-size: 0.95rem;
   color: var(--color-text-secondary);
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
   line-height: 1.5;
+}
+
+.home-note {
+  font-size: 0.8rem;
+  color: #f59e0b;
+  margin-bottom: 1rem;
 }
 
 .home-btn {

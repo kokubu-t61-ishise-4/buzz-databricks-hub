@@ -16,6 +16,9 @@ export default function Home() {
           <p className="home-desc">
             IT全般のニュースを広くチェック。毎朝のニュースキャッチアップに最適。
           </p>
+          <p className="home-note">
+            ※初回起動に30秒〜2分かかることがあります
+          </p>
           <a
             href="https://huggingface.co/spaces/byteflow-user/byteflow"
             target="_blank"
