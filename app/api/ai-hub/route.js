@@ -6,9 +6,10 @@ const RSS_FEEDS = [
   'https://qiita.com/tags/llm/feed',
   'https://qiita.com/tags/ai/feed',
   'https://qiita.com/tags/claude/feed',
+  'https://qiita.com/tags/chatgpt/feed',
   'https://zenn.dev/topics/llm/feed',
-  'https://the-decoder.com/feed/',
-  'https://huggingface.co/blog/feed.xml'
+  'https://zenn.dev/topics/ai/feed',
+  'https://zenn.dev/topics/claude/feed'
 ];
 
 export async function GET() {
@@ -32,8 +33,7 @@ export async function GET() {
     }
 
     const prompt = `以下は複数のRSSフィードから取得したAI・LLM関連の最新記事です。
-この中から、エンジニアが知っておくべきAI・LLM関連の記事を8件選び、フィルタリング・要約してください。
-必ずtype="Qiita"を2件以上含めること（URLにqiita.comが含まれるもの）。
+この中から、エンジニアが知っておくべきAI・LLM関連の記事を5件選び、要約してください。
 JSONの配列のみを返してください。マークダウン・コードブロック不要。
 
 ${combinedText}
@@ -45,7 +45,7 @@ ${combinedText}
     "titleJa": "日本語タイトル（元の記事タイトル）",
     "type": "Model または Research または Tool または Qiita",
     "isNew": true,
-    "date": "YYYY-MM-DD形式の日付",
+    "date": "YYYY-MM-DD形式の日付（元記事のDateから取得）",
     "summaryEn": "英語で1文の要約",
     "summaryJa": "日本語で1文の要約",
     "descEn": "英語で2文以内の説明",
@@ -56,16 +56,16 @@ ${combinedText}
       {
         "titleEn": "リンクタイトル（英語）",
         "titleJa": "リンクタイトル（日本語）",
-        "source": "Qiita または Zenn または その他ソース名",
-        "url": "実際のURL"
+        "source": "Qiita または Zenn",
+        "url": "元記事のURL"
       }
     ]
   }
 ]
 
 重要：
-- URLは取得した記事の実際のURLを使用すること
-- 日付は記事の公開日を使用すること
+- dateは元記事のDateフィールドをYYYY-MM-DD形式に変換すること
+- URLは元記事のURLをそのまま使用すること
 - 架空の情報を生成せず、取得した記事のみを使用すること`;
 
     const groqResponse = await callGroq(prompt);

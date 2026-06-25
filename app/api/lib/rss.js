@@ -43,10 +43,17 @@ export async function fetchMultipleRSS(feedUrls) {
       items.push(...result.value);
     }
   }
+
+  items.sort((a, b) => {
+    const dateA = new Date(a.pubDate || 0);
+    const dateB = new Date(b.pubDate || 0);
+    return dateB - dateA;
+  });
+
   return items;
 }
 
-export function formatRSSItemsForPrompt(items, maxItems = 5, maxLength = 3000) {
+export function formatRSSItemsForPrompt(items, maxItems = 10, maxLength = 4000) {
   if (!Array.isArray(items) || items.length === 0) {
     return '';
   }
@@ -55,7 +62,7 @@ export function formatRSSItemsForPrompt(items, maxItems = 5, maxLength = 3000) {
     .slice(0, maxItems)
     .map(item => {
       const title = item.title || '';
-      const content = (item.description || item.content || '').replace(/<[^>]*>/g, '').substring(0, 300);
+      const content = (item.description || item.content || '').replace(/<[^>]*>/g, '').substring(0, 200);
       const link = item.link || '';
       const date = item.pubDate || '';
       return `Title: ${title}\nDate: ${date}\nURL: ${link}\nContent: ${content}`;

@@ -6,10 +6,10 @@ const RSS_FEEDS = [
   'https://qiita.com/tags/cursor/feed',
   'https://qiita.com/tags/githubcopilot/feed',
   'https://qiita.com/tags/claudecode/feed',
+  'https://qiita.com/tags/vscode/feed',
   'https://zenn.dev/topics/cursor/feed',
   'https://zenn.dev/topics/githubcopilot/feed',
-  'https://github.blog/feed/',
-  'https://code.visualstudio.com/feed.xml'
+  'https://zenn.dev/topics/vscode/feed'
 ];
 
 export async function GET() {
@@ -33,8 +33,7 @@ export async function GET() {
     }
 
     const prompt = `以下は複数のRSSフィードから取得したAI駆動開発関連の最新記事です。
-この中から、エンジニアが知っておくべきAI駆動開発・Vibe Codingの記事を8件選び、フィルタリング・要約してください。
-必ずtype="Qiita"を2件以上含めること（URLにqiita.comが含まれるもの）。
+この中から、エンジニアが知っておくべきAI駆動開発・Vibe Codingの記事を5件選び、要約してください。
 JSONの配列のみを返してください。マークダウン・コードブロック不要。
 
 ${combinedText}
@@ -46,7 +45,7 @@ ${combinedText}
     "titleJa": "日本語タイトル（元の記事タイトル）",
     "type": "IDE または Prompt または Agent または Qiita",
     "isNew": true,
-    "date": "YYYY-MM-DD形式の日付",
+    "date": "YYYY-MM-DD形式の日付（元記事のDateから取得）",
     "summaryEn": "英語で1文の要約",
     "summaryJa": "日本語で1文の要約",
     "descEn": "英語で2文以内の説明",
@@ -57,16 +56,16 @@ ${combinedText}
       {
         "titleEn": "リンクタイトル（英語）",
         "titleJa": "リンクタイトル（日本語）",
-        "source": "Qiita または Zenn または GitHub Blog または その他ソース名",
-        "url": "実際のURL"
+        "source": "Qiita または Zenn",
+        "url": "元記事のURL"
       }
     ]
   }
 ]
 
 重要：
-- URLは取得した記事の実際のURLを使用すること
-- 日付は記事の公開日を使用すること
+- dateは元記事のDateフィールドをYYYY-MM-DD形式に変換すること
+- URLは元記事のURLをそのまま使用すること
 - 架空の情報を生成せず、取得した記事のみを使用すること`;
 
     const groqResponse = await callGroq(prompt);

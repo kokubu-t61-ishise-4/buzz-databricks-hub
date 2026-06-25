@@ -3,12 +3,11 @@ import { fetchMultipleRSS, formatRSSItemsForPrompt } from '../lib/rss';
 import { callGroq, parseGroqJSON } from '../lib/groq';
 
 const RSS_FEEDS = [
-  'https://www.publickey1.jp/atom.xml',
-  'https://hnrss.org/frontpage',
   'https://zenn.dev/feed',
   'https://qiita.com/popular-items/feed',
-  'https://techcrunch.com/category/artificial-intelligence/feed/',
-  'https://gihyo.jp/dev/feed/rss2'
+  'https://qiita.com/tags/tech/feed',
+  'https://zenn.dev/topics/frontend/feed',
+  'https://zenn.dev/topics/backend/feed'
 ];
 
 export async function GET() {
@@ -32,7 +31,7 @@ export async function GET() {
     }
 
     const prompt = `以下は複数のRSSフィードから取得したIT技術関連の最新記事です。
-この中から、エンジニアが知っておくべきITバズワード・トレンド用語を8個抽出してください。
+この中から、エンジニアが知っておくべきITバズワード・トレンド用語を5個抽出してください。
 JSONの配列のみを返してください。マークダウン・コードブロック不要。
 
 ${combinedText}
@@ -54,16 +53,16 @@ ${combinedText}
     "articles": [
       {
         "titleEn": "記事タイトル（英語）",
-        "titleJa": "記事タイトル（日本語訳）",
-        "source": "ソース名",
-        "url": "実際のURL"
+        "titleJa": "記事タイトル（日本語）",
+        "source": "Qiita または Zenn",
+        "url": "元記事のURL"
       }
     ]
   }
 ]
 
 重要：
-- URLは取得した記事の実際のURLを使用すること
+- URLは元記事のURLをそのまま使用すること
 - 記事から実際に言及されているバズワード・用語を抽出すること
 - 架空の情報を生成せず、取得した記事に基づいて抽出すること`;
 
