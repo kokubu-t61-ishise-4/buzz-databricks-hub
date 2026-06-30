@@ -62,4 +62,4 @@ RSSフィードから取得した情報をそのまま表示しています：
 環境変数は不要です。外部APIキーなしで動作します。
 
 ## URL
-https://6a337791c1ea93000826eb38--musical-stardust-da3de9.netlify.app/
+https://musical-stardust-da3de9.netlify.app/
