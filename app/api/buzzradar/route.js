@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
-import { fetchMultipleRSS, formatRSSItemsForPrompt } from '../lib/rss';
-import { callGroq, parseGroqJSON } from '../lib/groq';
+import { fetchMultipleRSS, formatRSSItemsForDisplay } from '../lib/rss';
 
 const RSS_FEEDS = [
   'https://zenn.dev/feed',
@@ -21,81 +20,11 @@ export async function GET() {
       }, { status: 503 });
     }
 
-    const { text: combinedText, items: rssMetadata } = formatRSSItemsForPrompt(items, 5);
+    const data = formatRSSItemsForDisplay(items, 5);
 
-    if (!combinedText) {
-      return NextResponse.json({
-        error: 'RSS_PARSE_ERROR',
-        message: 'RSSフィードの解析に失敗しました。'
-      }, { status: 500 });
-    }
-
-    const prompt = `以下は複数のRSSフィードから取得したIT技術関連の最新記事です。
-この中から、エンジニアが知っておくべきITバズワード・トレンド用語を最大3個抽出してください。
-JSONの配列のみを返してください。マークダウン・コードブロック不要。
-
-${combinedText}
-
-返すJSONの形式：
-[
-  {
-    "termEn": "英語の用語名",
-    "termJa": "日本語訳または読み仮名",
-    "category": "AI/ML または Infrastructure または Data または Security",
-    "region": "overseas または japan または both",
-    "heat": 1から5の整数（注目度）,
-    "summaryEn": "英語で1文の要約",
-    "summaryJa": "日本語で1文の要約",
-    "definitionEn": "英語で1〜2文の詳細定義",
-    "definitionJa": "日本語で1〜2文の詳細定義",
-    "articles": [
-      {
-        "index": 1,
-        "titleEn": "記事タイトル（英語）",
-        "titleJa": "記事タイトル（日本語）",
-        "source": "Qiita または Zenn"
-      }
-    ]
-  }
-]
-
-【絶対厳守】
-- articles.indexは記事番号[1], [2], [3]...に対応する数字を使用すること
-- 記事から実際に言及されているバズワード・用語のみを抽出すること
-- 提供された記事のみを使用すること。架空のバズワード・情報を絶対に生成しないこと`;
-
-    const groqResponse = await callGroq(prompt);
-    const content = groqResponse.choices[0].message.content;
-    const aiData = parseGroqJSON(content);
-
-    if (!Array.isArray(aiData)) {
-      return NextResponse.json({
-        error: 'PARSE_ERROR',
-        message: 'AIレスポンスの解析に失敗しました。再取得してください。'
-      }, { status: 500 });
-    }
-
-    const data = aiData.map(item => ({
-      ...item,
-      articles: (item.articles || []).map(article => {
-        const meta = rssMetadata.find(m => m.index === article.index) || rssMetadata[0];
-        return {
-          ...article,
-          url: meta?.url || ''
-        };
-      })
-    }));
-
-    return NextResponse.json(data.slice(0, 3));
+    return NextResponse.json(data);
   } catch (error) {
     console.error('BuzzRadar API error:', error);
-
-    if (error.message === 'RATE_LIMIT') {
-      return NextResponse.json({
-        error: 'RATE_LIMIT',
-        message: 'APIの利用制限に達しました。しばらく待ってから再取得してください。'
-      }, { status: 429 });
-    }
 
     return NextResponse.json({
       error: 'SERVER_ERROR',

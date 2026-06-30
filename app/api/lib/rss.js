@@ -60,32 +60,40 @@ function formatPubDate(pubDate) {
   return date.toISOString().split('T')[0];
 }
 
-export function formatRSSItemsForPrompt(items, maxItems = 5, maxLength = 2000) {
+function detectSource(url) {
+  if (!url) return 'Unknown';
+  if (url.includes('qiita.com')) return 'Qiita';
+  if (url.includes('zenn.dev')) return 'Zenn';
+  return 'Unknown';
+}
+
+export function formatRSSItemsForDisplay(items, maxItems = 5) {
   if (!Array.isArray(items) || items.length === 0) {
-    return { text: '', items: [] };
+    return [];
   }
 
-  const topItems = items.slice(0, maxItems);
+  return items.slice(0, maxItems).map(item => {
+    const description = (item.description || item.content || '').replace(/<[^>]*>/g, '');
+    const summary = description.substring(0, 100) + (description.length > 100 ? '...' : '');
+    const url = item.link || '';
 
-  let text = topItems
-    .map((item, index) => {
-      const title = item.title || '';
-      const content = (item.description || item.content || '').replace(/<[^>]*>/g, '').substring(0, 150);
-      const link = item.link || '';
-      const date = formatPubDate(item.pubDate);
-      return `[${index + 1}] Title: ${title}\nDate: ${date}\nURL: ${link}\nContent: ${content}`;
-    })
-    .join('\n\n---\n\n');
-
-  if (text.length > maxLength) {
-    text = text.substring(0, maxLength);
-  }
-
-  const metadata = topItems.map((item, index) => ({
-    index: index + 1,
-    date: formatPubDate(item.pubDate),
-    url: item.link || ''
-  }));
-
-  return { text, items: metadata };
+    return {
+      titleJa: item.title || '',
+      titleEn: item.title || '',
+      date: formatPubDate(item.pubDate),
+      summary,
+      summaryJa: summary,
+      summaryEn: summary,
+      descJa: summary,
+      descEn: summary,
+      type: detectSource(url),
+      isNew: true,
+      links: [{
+        titleJa: item.title || '',
+        titleEn: item.title || '',
+        source: detectSource(url),
+        url
+      }]
+    };
+  });
 }
