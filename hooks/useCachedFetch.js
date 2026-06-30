@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 
-const CACHE_DURATION = 30 * 60 * 1000; // 30分
+const CACHE_DURATION = 5 * 60 * 1000; // 5分
 
 export function useCachedFetch(apiEndpoint, cacheKey) {
   const [items, setItems] = useState([]);
@@ -44,6 +44,7 @@ export function useCachedFetch(apiEndpoint, cacheKey) {
     if (!forceRefresh) {
       const cached = getCachedData();
       if (cached) {
+        console.log('[DEBUG] Using cached data for', apiEndpoint);
         setItems(cached);
         setLoading(false);
         return;

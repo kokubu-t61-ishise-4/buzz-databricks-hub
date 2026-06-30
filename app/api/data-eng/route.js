@@ -86,7 +86,7 @@ ${combinedText}
       };
     });
 
-    return NextResponse.json(data);
+    return NextResponse.json(data.slice(0, 3));
   } catch (error) {
     console.error('Data Eng API error:', error);
 

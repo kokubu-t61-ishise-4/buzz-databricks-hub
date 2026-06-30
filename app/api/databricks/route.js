@@ -89,8 +89,10 @@ ${combinedText}
       pubDate: item.pubDate
     }));
 
+    const limitedData = data.slice(0, 3);
+
     return NextResponse.json({
-      items: data,
+      items: limitedData,
       _debug: {
         rssItems: debugRssItems,
         rssMetadata,
