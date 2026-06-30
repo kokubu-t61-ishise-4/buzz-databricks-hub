@@ -23,7 +23,7 @@ export async function GET() {
       }, { status: 503 });
     }
 
-    const combinedText = formatRSSItemsForPrompt(items);
+    const { text: combinedText, items: rssMetadata } = formatRSSItemsForPrompt(items, 3);
 
     if (!combinedText) {
       return NextResponse.json({
@@ -33,19 +33,18 @@ export async function GET() {
     }
 
     const prompt = `以下は複数のRSSフィードから取得したAI駆動開発関連の最新記事です。
-この中から、エンジニアが知っておくべきAI駆動開発・Vibe Codingの記事を最大3件選び、要約してください。
-JSONの配列のみを返してください。マークダウン・コードブロック不要。
+各記事を要約してください。JSONの配列のみを返してください。マークダウン・コードブロック不要。
 
 ${combinedText}
 
-返すJSONの形式：
+返すJSONの形式（各記事に対応するindexを必ず含めること）：
 [
   {
+    "index": 1,
     "titleEn": "英語タイトル（記事タイトルを英訳）",
     "titleJa": "日本語タイトル（元の記事タイトル）",
     "type": "IDE または Prompt または Agent または Qiita",
     "isNew": true,
-    "date": "YYYY-MM-DD形式の日付（元記事のDateから取得）",
     "summaryEn": "英語で1文の要約",
     "summaryJa": "日本語で1文の要約",
     "descEn": "英語で1文の説明",
@@ -54,29 +53,38 @@ ${combinedText}
       {
         "titleEn": "リンクタイトル（英語）",
         "titleJa": "リンクタイトル（日本語）",
-        "source": "Qiita または Zenn",
-        "url": "元記事のURL"
+        "source": "Qiita または Zenn"
       }
     ]
   }
 ]
 
 【絶対厳守】
-- dateは元記事のDateフィールド（pubDate）をYYYY-MM-DD形式に変換すること。架空の日付を生成しないこと
-- URLは元記事のURLをそのまま使用すること
-- 取得した記事の情報のみを使用すること。架空の記事・情報を絶対に生成しないこと
-- 提供された記事データに存在しない情報を追加しないこと`;
+- indexは記事番号[1], [2], [3]に対応する数字を使用すること
+- 提供された記事のみを要約すること。架空の記事・情報を絶対に生成しないこと`;
 
     const groqResponse = await callGroq(prompt);
     const content = groqResponse.choices[0].message.content;
-    const data = parseGroqJSON(content);
+    const aiData = parseGroqJSON(content);
 
-    if (!Array.isArray(data)) {
+    if (!Array.isArray(aiData)) {
       return NextResponse.json({
         error: 'PARSE_ERROR',
         message: 'AIレスポンスの解析に失敗しました。再取得してください。'
       }, { status: 500 });
     }
+
+    const data = aiData.map(item => {
+      const meta = rssMetadata.find(m => m.index === item.index) || rssMetadata[0];
+      return {
+        ...item,
+        date: meta?.date || '',
+        links: (item.links || []).map(link => ({
+          ...link,
+          url: meta?.url || ''
+        }))
+      };
+    });
 
     return NextResponse.json(data);
   } catch (error) {

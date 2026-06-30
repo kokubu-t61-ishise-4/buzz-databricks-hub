@@ -53,61 +53,39 @@ export async function fetchMultipleRSS(feedUrls) {
   return items;
 }
 
-function getJSTDate(date = new Date()) {
-  const jstOffset = 9 * 60 * 60 * 1000;
-  const jstDate = new Date(date.getTime() + jstOffset);
-  return jstDate.toISOString().split('T')[0];
-}
-
-function filterByDate(items, daysBack) {
-  const now = new Date();
-  const jstOffset = 9 * 60 * 60 * 1000;
-  const jstNow = new Date(now.getTime() + jstOffset);
-  const targetDate = new Date(jstNow);
-  targetDate.setDate(targetDate.getDate() - daysBack);
-  const targetDateStr = targetDate.toISOString().split('T')[0];
-
-  return items.filter(item => {
-    if (!item.pubDate) return false;
-    const itemDate = new Date(item.pubDate);
-    const itemJST = new Date(itemDate.getTime() + jstOffset);
-    const itemDateStr = itemJST.toISOString().split('T')[0];
-    return itemDateStr >= targetDateStr;
-  });
+function formatPubDate(pubDate) {
+  if (!pubDate) return '';
+  const date = new Date(pubDate);
+  if (isNaN(date.getTime())) return pubDate;
+  return date.toISOString().split('T')[0];
 }
 
 export function formatRSSItemsForPrompt(items, maxItems = 5, maxLength = 2000) {
   if (!Array.isArray(items) || items.length === 0) {
-    return '';
+    return { text: '', items: [] };
   }
 
-  let filteredItems = filterByDate(items, 0);
+  const topItems = items.slice(0, maxItems);
 
-  if (filteredItems.length === 0) {
-    filteredItems = filterByDate(items, 1);
-  }
-
-  if (filteredItems.length === 0) {
-    filteredItems = filterByDate(items, 3);
-  }
-
-  if (filteredItems.length === 0) {
-    filteredItems = items.slice(0, maxItems);
-  }
-
-  let text = filteredItems
-    .slice(0, maxItems)
-    .map(item => {
+  let text = topItems
+    .map((item, index) => {
       const title = item.title || '';
       const content = (item.description || item.content || '').replace(/<[^>]*>/g, '').substring(0, 150);
       const link = item.link || '';
-      const date = item.pubDate || '';
-      return `Title: ${title}\nDate: ${date}\nURL: ${link}\nContent: ${content}`;
+      const date = formatPubDate(item.pubDate);
+      return `[${index + 1}] Title: ${title}\nDate: ${date}\nURL: ${link}\nContent: ${content}`;
     })
     .join('\n\n---\n\n');
 
   if (text.length > maxLength) {
     text = text.substring(0, maxLength);
   }
-  return text;
+
+  const metadata = topItems.map((item, index) => ({
+    index: index + 1,
+    date: formatPubDate(item.pubDate),
+    url: item.link || ''
+  }));
+
+  return { text, items: metadata };
 }

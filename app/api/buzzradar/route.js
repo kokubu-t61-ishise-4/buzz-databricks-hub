@@ -21,7 +21,7 @@ export async function GET() {
       }, { status: 503 });
     }
 
-    const combinedText = formatRSSItemsForPrompt(items);
+    const { text: combinedText, items: rssMetadata } = formatRSSItemsForPrompt(items, 5);
 
     if (!combinedText) {
       return NextResponse.json({
@@ -50,31 +50,41 @@ ${combinedText}
     "definitionJa": "日本語で1〜2文の詳細定義",
     "articles": [
       {
+        "index": 1,
         "titleEn": "記事タイトル（英語）",
         "titleJa": "記事タイトル（日本語）",
-        "source": "Qiita または Zenn",
-        "url": "元記事のURL"
+        "source": "Qiita または Zenn"
       }
     ]
   }
 ]
 
 【絶対厳守】
-- URLは元記事のURLをそのまま使用すること
+- articles.indexは記事番号[1], [2], [3]...に対応する数字を使用すること
 - 記事から実際に言及されているバズワード・用語のみを抽出すること
-- 取得した記事の情報のみを使用すること。架空のバズワード・情報を絶対に生成しないこと
-- 提供された記事データに存在しない情報を追加しないこと`;
+- 提供された記事のみを使用すること。架空のバズワード・情報を絶対に生成しないこと`;
 
     const groqResponse = await callGroq(prompt);
     const content = groqResponse.choices[0].message.content;
-    const data = parseGroqJSON(content);
+    const aiData = parseGroqJSON(content);
 
-    if (!Array.isArray(data)) {
+    if (!Array.isArray(aiData)) {
       return NextResponse.json({
         error: 'PARSE_ERROR',
         message: 'AIレスポンスの解析に失敗しました。再取得してください。'
       }, { status: 500 });
     }
+
+    const data = aiData.map(item => ({
+      ...item,
+      articles: (item.articles || []).map(article => {
+        const meta = rssMetadata.find(m => m.index === article.index) || rssMetadata[0];
+        return {
+          ...article,
+          url: meta?.url || ''
+        };
+      })
+    }));
 
     return NextResponse.json(data);
   } catch (error) {
