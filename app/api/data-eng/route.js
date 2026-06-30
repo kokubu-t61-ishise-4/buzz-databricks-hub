@@ -33,7 +33,7 @@ export async function GET() {
     }
 
     const prompt = `以下は複数のRSSフィードから取得したデータエンジニアリング関連の最新記事です。
-この中から、データエンジニアが知っておくべき最新情報を5件選び、要約してください。
+この中から、データエンジニアが知っておくべき最新情報を最大3件選び、要約してください。
 JSONの配列のみを返してください。マークダウン・コードブロック不要。
 
 ${combinedText}
@@ -48,10 +48,8 @@ ${combinedText}
     "date": "YYYY-MM-DD形式の日付（元記事のDateから取得）",
     "summaryEn": "英語で1文の要約",
     "summaryJa": "日本語で1文の要約",
-    "descEn": "英語で2文以内の説明",
-    "descJa": "日本語で2文以内の説明",
-    "impactEn": "英語でデータエンジニアへの影響2〜3文",
-    "impactJa": "日本語でデータエンジニアへの影響2〜3文",
+    "descEn": "英語で1文の説明",
+    "descJa": "日本語で1文の説明",
     "links": [
       {
         "titleEn": "リンクタイトル（英語）",
@@ -63,10 +61,11 @@ ${combinedText}
   }
 ]
 
-重要：
-- dateは元記事のDateフィールドをYYYY-MM-DD形式に変換すること
+【絶対厳守】
+- dateは元記事のDateフィールド（pubDate）をYYYY-MM-DD形式に変換すること。架空の日付を生成しないこと
 - URLは元記事のURLをそのまま使用すること
-- 架空の情報を生成せず、取得した記事のみを使用すること`;
+- 取得した記事の情報のみを使用すること。架空の記事・情報を絶対に生成しないこと
+- 提供された記事データに存在しない情報を追加しないこと`;
 
     const groqResponse = await callGroq(prompt);
     const content = groqResponse.choices[0].message.content;

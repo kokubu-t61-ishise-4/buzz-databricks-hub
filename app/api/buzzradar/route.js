@@ -31,7 +31,7 @@ export async function GET() {
     }
 
     const prompt = `以下は複数のRSSフィードから取得したIT技術関連の最新記事です。
-この中から、エンジニアが知っておくべきITバズワード・トレンド用語を5個抽出してください。
+この中から、エンジニアが知っておくべきITバズワード・トレンド用語を最大3個抽出してください。
 JSONの配列のみを返してください。マークダウン・コードブロック不要。
 
 ${combinedText}
@@ -44,12 +44,10 @@ ${combinedText}
     "category": "AI/ML または Infrastructure または Data または Security",
     "region": "overseas または japan または both",
     "heat": 1から5の整数（注目度）,
-    "summaryEn": "英語で1〜2文の要約",
-    "summaryJa": "日本語で1〜2文の要約",
-    "definitionEn": "英語で3〜4文の詳細定義",
-    "definitionJa": "日本語で3〜4文の詳細定義",
-    "backgroundEn": "英語で登場背景2〜3文",
-    "backgroundJa": "日本語で登場背景2〜3文",
+    "summaryEn": "英語で1文の要約",
+    "summaryJa": "日本語で1文の要約",
+    "definitionEn": "英語で1〜2文の詳細定義",
+    "definitionJa": "日本語で1〜2文の詳細定義",
     "articles": [
       {
         "titleEn": "記事タイトル（英語）",
@@ -61,10 +59,11 @@ ${combinedText}
   }
 ]
 
-重要：
+【絶対厳守】
 - URLは元記事のURLをそのまま使用すること
-- 記事から実際に言及されているバズワード・用語を抽出すること
-- 架空の情報を生成せず、取得した記事に基づいて抽出すること`;
+- 記事から実際に言及されているバズワード・用語のみを抽出すること
+- 取得した記事の情報のみを使用すること。架空のバズワード・情報を絶対に生成しないこと
+- 提供された記事データに存在しない情報を追加しないこと`;
 
     const groqResponse = await callGroq(prompt);
     const content = groqResponse.choices[0].message.content;

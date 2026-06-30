@@ -53,16 +53,53 @@ export async function fetchMultipleRSS(feedUrls) {
   return items;
 }
 
-export function formatRSSItemsForPrompt(items, maxItems = 10, maxLength = 4000) {
+function getJSTDate(date = new Date()) {
+  const jstOffset = 9 * 60 * 60 * 1000;
+  const jstDate = new Date(date.getTime() + jstOffset);
+  return jstDate.toISOString().split('T')[0];
+}
+
+function filterByDate(items, daysBack) {
+  const now = new Date();
+  const jstOffset = 9 * 60 * 60 * 1000;
+  const jstNow = new Date(now.getTime() + jstOffset);
+  const targetDate = new Date(jstNow);
+  targetDate.setDate(targetDate.getDate() - daysBack);
+  const targetDateStr = targetDate.toISOString().split('T')[0];
+
+  return items.filter(item => {
+    if (!item.pubDate) return false;
+    const itemDate = new Date(item.pubDate);
+    const itemJST = new Date(itemDate.getTime() + jstOffset);
+    const itemDateStr = itemJST.toISOString().split('T')[0];
+    return itemDateStr >= targetDateStr;
+  });
+}
+
+export function formatRSSItemsForPrompt(items, maxItems = 5, maxLength = 2000) {
   if (!Array.isArray(items) || items.length === 0) {
     return '';
   }
 
-  let text = items
+  let filteredItems = filterByDate(items, 0);
+
+  if (filteredItems.length === 0) {
+    filteredItems = filterByDate(items, 1);
+  }
+
+  if (filteredItems.length === 0) {
+    filteredItems = filterByDate(items, 3);
+  }
+
+  if (filteredItems.length === 0) {
+    filteredItems = items.slice(0, maxItems);
+  }
+
+  let text = filteredItems
     .slice(0, maxItems)
     .map(item => {
       const title = item.title || '';
-      const content = (item.description || item.content || '').replace(/<[^>]*>/g, '').substring(0, 200);
+      const content = (item.description || item.content || '').replace(/<[^>]*>/g, '').substring(0, 150);
       const link = item.link || '';
       const date = item.pubDate || '';
       return `Title: ${title}\nDate: ${date}\nURL: ${link}\nContent: ${content}`;
