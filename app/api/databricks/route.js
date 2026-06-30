@@ -83,7 +83,20 @@ ${combinedText}
       };
     });
 
-    return NextResponse.json(data);
+    const debugRssItems = items.slice(0, 5).map((item, i) => ({
+      index: i + 1,
+      title: item.title?.substring(0, 50),
+      pubDate: item.pubDate
+    }));
+
+    return NextResponse.json({
+      items: data,
+      _debug: {
+        rssItems: debugRssItems,
+        rssMetadata,
+        aiIndexes: aiData.map(d => d.index)
+      }
+    });
   } catch (error) {
     console.error('Databricks API error:', error);
 

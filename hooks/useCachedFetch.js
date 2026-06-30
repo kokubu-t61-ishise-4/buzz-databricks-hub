@@ -64,12 +64,22 @@ export function useCachedFetch(apiEndpoint, cacheKey) {
         throw new Error(data.message || data.error);
       }
 
-      if (!Array.isArray(data)) {
+      let itemsData;
+      if (Array.isArray(data)) {
+        itemsData = data;
+      } else if (data.items && Array.isArray(data.items)) {
+        itemsData = data.items;
+        if (data._debug) {
+          console.log('[DEBUG] RSS Items:', data._debug.rssItems);
+          console.log('[DEBUG] RSS Metadata:', data._debug.rssMetadata);
+          console.log('[DEBUG] AI Indexes:', data._debug.aiIndexes);
+        }
+      } else {
         throw new Error('不正なデータ形式です。');
       }
 
-      setItems(data);
-      setCachedData(data);
+      setItems(itemsData);
+      setCachedData(itemsData);
       setError(null);
     } catch (err) {
       setError(err.message);
